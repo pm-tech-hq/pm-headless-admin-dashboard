@@ -1,0 +1,20 @@
+export type Brand = {
+    brandName: string;
+    tagline: string;
+    description: string;
+    logoFile?: File | null;
+    logoPreviewUrl?: string | null;
+    primaryColor: string;
+    secondaryColor: string;
+    accentColor: string;
+    fontFamily: string;
+    websiteUrl: string;
+    dashboardSubdomain: string;
+    contactEmail: string;
+    supportEmail: string;
+    facebookUrl: string;
+    twitterUrl: string;
+    instagramUrl: string;
+    linkedinUrl: string;
+    darkModeDefault: boolean;
+};
