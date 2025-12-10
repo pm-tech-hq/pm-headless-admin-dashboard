@@ -31,6 +31,11 @@ type Widget = {
   apiUrl?: string;
 };
 
+type DashboardLayout = {
+  menuItems: MenuItem[];
+  widgetSets: Record<number, Widget[]>;
+};
+
 type Shape = "array" | "object" | "string" | "number" | "boolean" | "null" | "unknown";
 type Presentation = "stats" | "list" | "text" | "raw";
 
@@ -44,6 +49,46 @@ type WidgetStatus =
       message: string;
     }
   | { state: "error"; message: string };
+
+const defaultLayout: DashboardLayout = {
+  menuItems: [
+    { id: 1, label: "Overview" },
+    { id: 2, label: "Analytics" },
+    { id: 3, label: "Settings" },
+  ],
+  widgetSets: {
+    1: [
+      { id: 1, title: "Traffic (auto)", type: "auto" },
+      { id: 2, title: "Notes (editable)", type: "editable" },
+    ],
+  },
+};
+
+const defaultWidgetTone = {
+  container: "bg-white border-neutral-200",
+  badge: "border-neutral-300 text-neutral-500",
+  accent: "text-neutral-500",
+};
+
+const widgetTone: Partial<Record<WidgetType, typeof defaultWidgetTone>> = {
+  auto: { container: "bg-white border-neutral-200", badge: "border-neutral-300 text-neutral-600", accent: "text-neutral-600" },
+  stats: { container: "bg-amber-50 border-amber-200", badge: "border-amber-300 text-amber-700", accent: "text-amber-700" },
+  text: { container: "bg-indigo-50 border-indigo-200", badge: "border-indigo-300 text-indigo-700", accent: "text-indigo-700" },
+  list: { container: "bg-blue-50 border-blue-200", badge: "border-blue-300 text-blue-700", accent: "text-blue-700" },
+  raw: { container: "bg-slate-50 border-slate-200", badge: "border-slate-300 text-slate-700", accent: "text-slate-700" },
+  weather: { container: "bg-sky-50 border-sky-200", badge: "border-sky-300 text-sky-700", accent: "text-sky-700" },
+  stocks: { container: "bg-emerald-50 border-emerald-200", badge: "border-emerald-300 text-emerald-700", accent: "text-emerald-700" },
+  exchangeRates: { container: "bg-teal-50 border-teal-200", badge: "border-teal-300 text-teal-700", accent: "text-teal-700" },
+  movies: { container: "bg-rose-50 border-rose-200", badge: "border-rose-300 text-rose-700", accent: "text-rose-700" },
+  books: { container: "bg-amber-50 border-amber-200", badge: "border-amber-300 text-amber-700", accent: "text-amber-700" },
+  aiModels: { container: "bg-purple-50 border-purple-200", badge: "border-purple-300 text-purple-700", accent: "text-purple-700" },
+  news: { container: "bg-orange-50 border-orange-200", badge: "border-orange-300 text-orange-700", accent: "text-orange-700" },
+  sports: { container: "bg-lime-50 border-lime-200", badge: "border-lime-300 text-lime-700", accent: "text-lime-700" },
+  gaming: { container: "bg-fuchsia-50 border-fuchsia-200", badge: "border-fuchsia-300 text-fuchsia-700", accent: "text-fuchsia-700" },
+  editable: { container: "bg-neutral-50 border-neutral-200", badge: "border-neutral-300 text-neutral-700", accent: "text-neutral-700" },
+};
+
+const toneFor = (type: WidgetType) => widgetTone[type] ?? defaultWidgetTone;
 
 // ─────────────────────────────────────────────────────────
 // Helpers: shape & presentation
@@ -167,6 +212,7 @@ function WidgetCard({ widget, onRemove }: { widget: Widget; onRemove: (id: numbe
   const [status, setStatus] = useState<WidgetStatus>({ state: "idle" });
   const [data, setData] = useState<any>(null);
   const [editableContent, setEditableContent] = useState<string>("");
+  const tone = toneFor(widget.type);
 
   const shouldUseApi = widget.type !== "editable";
 
@@ -655,7 +701,7 @@ function WidgetCard({ widget, onRemove }: { widget: Widget; onRemove: (id: numbe
   // Main content chooser
   // ─────────────────────────────────────────────────────
 
-  const renderContent = () => {
+  const WidgetContent = () => {
     if (widget.type === "editable") {
       return (
         <div className="mt-2 border border-dashed border-neutral-300 rounded-lg p-3">
@@ -714,7 +760,7 @@ function WidgetCard({ widget, onRemove }: { widget: Widget; onRemove: (id: numbe
   const renderStatusBadge = () => {
     if (widget.type === "editable") {
       return (
-        <span className="text-[10px] px-2 py-0.5 rounded-full border border-neutral-300 text-neutral-500">
+        <span className={`text-[10px] px-2 py-0.5 rounded-full border ${tone.badge}`}>
           Local
         </span>
       );
@@ -722,7 +768,7 @@ function WidgetCard({ widget, onRemove }: { widget: Widget; onRemove: (id: numbe
 
     if (status.state === "idle") {
       return (
-        <span className="text-[10px] px-2 py-0.5 rounded-full border border-neutral-300 text-neutral-500">
+        <span className={`text-[10px] px-2 py-0.5 rounded-full border ${tone.badge}`}>
           No source
         </span>
       );
@@ -752,11 +798,16 @@ function WidgetCard({ widget, onRemove }: { widget: Widget; onRemove: (id: numbe
   };
 
   return (
-    <div className="border border-neutral-200 rounded-xl p-4 flex flex-col gap-2 bg-white">
+    <div
+      className={`rounded-xl p-4 flex flex-col gap-2 shadow-sm border ${tone.container}`}
+      data-widget-type={widget.type}
+    >
       <div className="flex items-center justify-between gap-2">
         <div className="flex flex-col gap-0.5">
           <h2 className="text-sm font-medium">{widget.title}</h2>
-          <p className="text-[11px] text-neutral-500 uppercase tracking-[0.14em]">
+          <p
+            className={`text-[11px] uppercase tracking-[0.14em] ${tone.accent}`}
+          >
             {labelForType(widget.type)}
           </p>
         </div>
@@ -793,7 +844,7 @@ function WidgetCard({ widget, onRemove }: { widget: Widget; onRemove: (id: numbe
         <p className="mt-1 text-[11px] text-neutral-500">{status.message}</p>
       )}
 
-      {renderContent()}
+      <WidgetContent />
 
       {widget.apiUrl && widget.type !== "editable" && (
         <p className="mt-1 text-[10px] text-neutral-400 break-all">
@@ -809,28 +860,31 @@ function WidgetCard({ widget, onRemove }: { widget: Widget; onRemove: (id: numbe
 // ─────────────────────────────────────────────────────────
 
 export default function Dashboard() {
-  const [menuItems, setMenuItems] = useState<MenuItem[]>([
-    { id: 1, label: "Overview" },
-    { id: 2, label: "Analytics" },
-    { id: 3, label: "Settings" },
-  ]);
-
-  const [widgets, setWidgets] = useState<Widget[]>([
-    { id: 1, title: "Traffic (auto)", type: "auto" },
-    { id: 2, title: "Notes (editable)", type: "editable" },
-  ]);
+  const [menuItems, setMenuItems] = useState<MenuItem[]>(defaultLayout.menuItems);
+  const [widgetSets, setWidgetSets] = useState<Record<number, Widget[]>>(
+    defaultLayout.widgetSets
+  );
+  const [activeMenuId, setActiveMenuId] = useState<number>(
+    defaultLayout.menuItems[0]?.id ?? 1
+  );
 
   const [newMenuLabel, setNewMenuLabel] = useState("");
   const [newWidgetTitle, setNewWidgetTitle] = useState("");
   const [newWidgetType, setNewWidgetType] = useState<WidgetType>("auto");
   const [newWidgetApiUrl, setNewWidgetApiUrl] = useState("");
+  const [isLoadingLayout, setIsLoadingLayout] = useState(true);
+  const [layoutError, setLayoutError] = useState<string | null>(null);
+  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
 
   const handleAddMenuItem = (e: FormEvent) => {
     e.preventDefault();
     const trimmed = newMenuLabel.trim();
     if (!trimmed) return;
 
-    setMenuItems((prev) => [...prev, { id: Date.now(), label: trimmed }]);
+    const id = Date.now();
+    setMenuItems((prev) => [...prev, { id, label: trimmed }]);
+    setWidgetSets((prev) => ({ ...prev, [id]: [] }));
+    setActiveMenuId(id);
     setNewMenuLabel("");
   };
 
@@ -838,10 +892,12 @@ export default function Dashboard() {
     e.preventDefault();
     const title = newWidgetTitle.trim();
     if (!title) return;
+    const menuId = activeMenuId;
+    if (!menuId) return;
 
-    setWidgets((prev) => [
-      ...prev,
-      {
+    setWidgetSets((prev) => {
+      const nextWidgets = prev[menuId] ?? [];
+      const newWidget: Widget = {
         id: Date.now(),
         title,
         type: newWidgetType,
@@ -849,15 +905,75 @@ export default function Dashboard() {
           newWidgetType === "editable"
             ? undefined
             : newWidgetApiUrl.trim() || undefined,
-      },
-    ]);
+      };
+
+      return { ...prev, [menuId]: [...nextWidgets, newWidget] };
+    });
 
     setNewWidgetTitle("");
     setNewWidgetApiUrl("");
   };
 
   const handleRemoveWidget = (id: number) => {
-    setWidgets((prev) => prev.filter((w) => w.id !== id));
+    const menuId = activeMenuId;
+    if (!menuId) return;
+    setWidgetSets((prev) => ({
+      ...prev,
+      [menuId]: (prev[menuId] ?? []).filter((w) => w.id !== id),
+    }));
+  };
+
+  useEffect(() => {
+    let active = true;
+    const fetchLayout = async () => {
+      setIsLoadingLayout(true);
+      try {
+        const res = await fetch("/api/dashboard", { cache: "no-store" });
+        if (!res.ok) {
+          throw new Error("Failed to load saved layout");
+        }
+        const json = (await res.json()) as DashboardLayout;
+        if (!active) return;
+        setMenuItems(json.menuItems ?? defaultLayout.menuItems);
+        setWidgetSets(json.widgetSets ?? defaultLayout.widgetSets);
+        setActiveMenuId(json.menuItems?.[0]?.id ?? defaultLayout.menuItems[0].id);
+        setLayoutError(null);
+      } catch (err) {
+        if (!active) return;
+        setLayoutError("Unable to load saved layout; using defaults for now.");
+        setMenuItems(defaultLayout.menuItems);
+        setWidgetSets(defaultLayout.widgetSets);
+        setActiveMenuId(defaultLayout.menuItems[0]?.id ?? 1);
+      } finally {
+        if (active) setIsLoadingLayout(false);
+      }
+    };
+
+    fetchLayout();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const handleSaveLayout = async () => {
+    setSaveState("saving");
+    try {
+      const res = await fetch("/api/dashboard", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ menuItems, widgetSets }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to save layout");
+      }
+
+      setSaveState("saved");
+      setLayoutError(null);
+      setTimeout(() => setSaveState("idle"), 1500);
+    } catch (err) {
+      setSaveState("error");
+    }
   };
 
   const typeGroups: { label: string; types: WidgetType[] }[] = [
@@ -885,6 +1001,14 @@ export default function Dashboard() {
     },
   ];
 
+  const widgets = widgetSets[activeMenuId] ?? [];
+
+  useEffect(() => {
+    if (!menuItems.find((item) => item.id === activeMenuId)) {
+      setActiveMenuId(menuItems[0]?.id ?? activeMenuId);
+    }
+  }, [menuItems, activeMenuId]);
+
   return (
     <div className="h-screen w-screen bg-white text-black flex overflow-hidden">
       {/* Sidebar */}
@@ -904,15 +1028,23 @@ export default function Dashboard() {
         {/* Menu list */}
         <div className="flex-1 overflow-y-auto">
           <nav className="px-3 py-4 space-y-1">
-            {menuItems.map((item) => (
-              <button
-                key={item.id}
-                className="w-full flex items-center justify-between text-left text-sm px-3 py-2 rounded-lg hover:bg-neutral-100"
-              >
+            {menuItems.map((item) => {
+              const isActive = activeMenuId === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveMenuId(item.id)}
+                  className={`w-full flex items-center justify-between text-left text-sm px-3 py-2 rounded-lg transition-colors ${
+                    isActive
+                      ? "bg-black text-white"
+                      : "hover:bg-neutral-100 text-neutral-900"
+                  }`}
+                >
                 <span>{item.label}</span>
                 <span className="text-[10px] text-neutral-400">•••</span>
-              </button>
-            ))}
+                </button>
+              );
+            })}
           </nav>
         </div>
 
@@ -950,8 +1082,23 @@ export default function Dashboard() {
             </span>
           </div>
           <div className="flex items-center gap-3 text-xs text-neutral-500">
-            <button className="border border-neutral-300 rounded-full px-3 py-1 hover:bg-neutral-100">
-              Save layout (hook to persistence later)
+            <button
+              type="button"
+              onClick={handleSaveLayout}
+              disabled={saveState === "saving" || isLoadingLayout}
+              className={`border border-neutral-300 rounded-full px-3 py-1 transition-colors ${
+                saveState === "saving" || isLoadingLayout
+                  ? "opacity-60 cursor-not-allowed"
+                  : "hover:bg-neutral-100"
+              }`}
+            >
+              {saveState === "saving"
+                ? "Saving..."
+                : saveState === "saved"
+                ? "Saved"
+                : saveState === "error"
+                ? "Retry save"
+                : "Save layout"}
             </button>
             <div className="h-7 w-7 rounded-full border border-neutral-300 flex items-center justify-center text-[11px]">
               U
@@ -973,12 +1120,31 @@ export default function Dashboard() {
                 </p>
               </div>
             </div>
+            {layoutError && (
+              <p className="text-[11px] text-red-600 mb-2">{layoutError}</p>
+            )}
+            {saveState === "saved" && (
+              <p className="text-[11px] text-emerald-600 mb-2">Layout saved to persistence.</p>
+            )}
+            {saveState === "error" && (
+              <p className="text-[11px] text-red-600 mb-2">
+                Save failed. Please check the API route and try again.
+              </p>
+            )}
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-              {widgets.map((widget) => (
-                <WidgetCard key={widget.id} widget={widget} onRemove={handleRemoveWidget} />
-              ))}
-            </div>
+            {isLoadingLayout ? (
+              <p className="text-[11px] text-neutral-500">Loading saved layout...</p>
+            ) : widgets.length === 0 ? (
+              <p className="text-[11px] text-neutral-500">
+                No widgets yet for this menu. Add one to start a fresh view.
+              </p>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+                {widgets.map((widget) => (
+                  <WidgetCard key={widget.id} widget={widget} onRemove={handleRemoveWidget} />
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Add widget panel */}

@@ -11,28 +11,71 @@
     {
       "id": 3,
       "label": "Settings"
+    },
+    {
+      "id": 1765342275672,
+      "label": "fgfg"
     }
   ],
-  "widgets": [
-    {
-      "id": 1,
-      "title": "Traffic",
-      "type": "stats"
-    },
-    {
-      "id": 2,
-      "title": "Notes",
-      "type": "text"
-    },
-    {
-      "id": 1764983934389,
-      "title": "hjghjghj",
-      "type": "stats"
-    },
-    {
-      "id": 1764984191261,
-      "title": "jghjghj",
-      "type": "text"
-    }
-  ]
+  "widgetSets": {
+    "1": [
+      {
+        "id": 1,
+        "title": "Traffic (auto)",
+        "type": "auto"
+      },
+      {
+        "id": 2,
+        "title": "Notes (editable)",
+        "type": "editable"
+      },
+      {
+        "id": 1765346564708,
+        "title": "ghyh",
+        "type": "stats",
+        "apiUrl": "https://ghjghjgh.com"
+      },
+      {
+        "id": 1765346571769,
+        "title": "hgjhgj",
+        "type": "text",
+        "apiUrl": "https://ghjghjgh.com"
+      },
+      {
+        "id": 1765346577046,
+        "title": "hjghjgh",
+        "type": "list",
+        "apiUrl": "https://ghjghjgh.com"
+      },
+      {
+        "id": 1765346582866,
+        "title": "bnbnb",
+        "type": "aiModels",
+        "apiUrl": "https://ghjghjgh.com"
+      }
+    ],
+    "2": [
+      {
+        "id": 1765346606006,
+        "title": "kjjhjkhj",
+        "type": "auto",
+        "apiUrl": "https://ghjghjgh.com"
+      }
+    ],
+    "3": [
+      {
+        "id": 1765346619961,
+        "title": "thhfghjjhgjhfg",
+        "type": "stocks",
+        "apiUrl": "https://ghjghjgh.com"
+      }
+    ],
+    "1765342275672": [
+      {
+        "id": 1765346633845,
+        "title": "bnvbnb",
+        "type": "editable"
+      }
+    ]
+  }
 }

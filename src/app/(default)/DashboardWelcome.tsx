@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, KeyboardEvent, MouseEvent } from "react";
+import { useRouter } from 'next/navigation';
 
 type BrandSetupData = {
   brandName: string;
@@ -25,7 +26,7 @@ export default function DashboardWelcome() {
   const [step, setStep] = useState(0);
   const [formData, setFormData] = useState<BrandSetupData>(initialData);
   const [isLoading, setIsLoading] = useState(true);
-
+  const router = useRouter();
   // 🔹 Load saved brand settings when component mounts
   useEffect(() => {
     const loadSettings = async () => {
@@ -107,6 +108,7 @@ export default function DashboardWelcome() {
         console.error("Error saving brand settings:", err);
       } finally {
         setIsModalOpen(false);
+        if (formData.brandName != "") router.push('/dashboard')
       }
     }
   };
@@ -182,9 +184,8 @@ export default function DashboardWelcome() {
                   {steps.map((label, index) => (
                     <div
                       key={label}
-                      className={`h-1.5 w-6 rounded-full ${
-                        index <= step ? "bg-black" : "bg-neutral-200"
-                      }`}
+                      className={`h-1.5 w-6 rounded-full ${index <= step ? "bg-black" : "bg-neutral-200"
+                        }`}
                     />
                   ))}
                 </div>
@@ -326,11 +327,10 @@ export default function DashboardWelcome() {
                 type="button"
                 onClick={handlePrevious}
                 disabled={step === 0}
-                className={`inline-flex items-center gap-1 text-xs border px-3 py-1.5 rounded-full ${
-                  step === 0
+                className={`inline-flex items-center gap-1 text-xs border px-3 py-1.5 rounded-full ${step === 0
                     ? "border-neutral-200 text-neutral-300 cursor-not-allowed"
                     : "border-neutral-400 text-neutral-700 hover:bg-neutral-100"
-                }`}
+                  }`}
               >
                 ← Previous
               </button>
