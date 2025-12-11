@@ -31,6 +31,27 @@ type Widget = {
   apiUrl?: string;
 };
 
+type BrandSetupData = {
+  brandName: string;
+  website: string;
+  brandColor: string;
+  tagline: string;
+  description: string;
+};
+
+type Branding = {
+  name: string;
+  subtitle: string;
+  initials: string;
+  accentColor: string;
+};
+
+type DashboardLayout = {
+  menuItems: MenuItem[];
+  widgetSets: Record<number, Widget[]>;
+  branding: Branding;
+};
+
 type Shape = "array" | "object" | "string" | "number" | "boolean" | "null" | "unknown";
 type Presentation = "stats" | "list" | "text" | "raw";
 
@@ -44,6 +65,60 @@ type WidgetStatus =
       message: string;
     }
   | { state: "error"; message: string };
+
+const defaultLayout: DashboardLayout = {
+  menuItems: [
+    { id: 1, label: "Overview" },
+    { id: 2, label: "Analytics" },
+    { id: 3, label: "Settings" },
+  ],
+  widgetSets: {
+    1: [
+      { id: 1, title: "Traffic (auto)", type: "auto" },
+      { id: 2, title: "Notes (editable)", type: "editable" },
+    ],
+  },
+  branding: {
+    name: "Admin dashboard",
+    subtitle: "Headless admin",
+    initials: "DB",
+    accentColor: "#000000",
+  },
+};
+
+const defaultWidgetTone = {
+  container: "bg-white border-neutral-200",
+  badge: "border-neutral-300 text-neutral-500",
+  accent: "text-neutral-500",
+};
+
+const defaultBrandSettings: BrandSetupData = {
+  brandName: "",
+  website: "",
+  brandColor: "#000000",
+  tagline: "",
+  description: "",
+};
+
+const widgetTone: Partial<Record<WidgetType, typeof defaultWidgetTone>> = {
+  auto: { container: "bg-white border-neutral-200", badge: "border-neutral-300 text-neutral-600", accent: "text-neutral-600" },
+  stats: { container: "bg-amber-50 border-amber-200", badge: "border-amber-300 text-amber-700", accent: "text-amber-700" },
+  text: { container: "bg-indigo-50 border-indigo-200", badge: "border-indigo-300 text-indigo-700", accent: "text-indigo-700" },
+  list: { container: "bg-blue-50 border-blue-200", badge: "border-blue-300 text-blue-700", accent: "text-blue-700" },
+  raw: { container: "bg-slate-50 border-slate-200", badge: "border-slate-300 text-slate-700", accent: "text-slate-700" },
+  weather: { container: "bg-sky-50 border-sky-200", badge: "border-sky-300 text-sky-700", accent: "text-sky-700" },
+  stocks: { container: "bg-emerald-50 border-emerald-200", badge: "border-emerald-300 text-emerald-700", accent: "text-emerald-700" },
+  exchangeRates: { container: "bg-teal-50 border-teal-200", badge: "border-teal-300 text-teal-700", accent: "text-teal-700" },
+  movies: { container: "bg-rose-50 border-rose-200", badge: "border-rose-300 text-rose-700", accent: "text-rose-700" },
+  books: { container: "bg-amber-50 border-amber-200", badge: "border-amber-300 text-amber-700", accent: "text-amber-700" },
+  aiModels: { container: "bg-purple-50 border-purple-200", badge: "border-purple-300 text-purple-700", accent: "text-purple-700" },
+  news: { container: "bg-orange-50 border-orange-200", badge: "border-orange-300 text-orange-700", accent: "text-orange-700" },
+  sports: { container: "bg-lime-50 border-lime-200", badge: "border-lime-300 text-lime-700", accent: "text-lime-700" },
+  gaming: { container: "bg-fuchsia-50 border-fuchsia-200", badge: "border-fuchsia-300 text-fuchsia-700", accent: "text-fuchsia-700" },
+  editable: { container: "bg-neutral-50 border-neutral-200", badge: "border-neutral-300 text-neutral-700", accent: "text-neutral-700" },
+};
+
+const toneFor = (type: WidgetType) => widgetTone[type] ?? defaultWidgetTone;
 
 // ─────────────────────────────────────────────────────────
 // Helpers: shape & presentation
@@ -159,6 +234,17 @@ function placeholderForType(type: WidgetType): string {
   }
 }
 
+function deriveInitials(name: string) {
+  const trimmed = name.trim();
+  if (!trimmed) return "DB";
+  const parts = trimmed.split(/\s+/).slice(0, 2);
+  return parts
+    .map((p) => p[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 3);
+}
+
 // ─────────────────────────────────────────────────────────
 // WidgetCard
 // ─────────────────────────────────────────────────────────
@@ -167,6 +253,7 @@ function WidgetCard({ widget, onRemove }: { widget: Widget; onRemove: (id: numbe
   const [status, setStatus] = useState<WidgetStatus>({ state: "idle" });
   const [data, setData] = useState<any>(null);
   const [editableContent, setEditableContent] = useState<string>("");
+  const tone = toneFor(widget.type);
 
   const shouldUseApi = widget.type !== "editable";
 
@@ -655,7 +742,7 @@ function WidgetCard({ widget, onRemove }: { widget: Widget; onRemove: (id: numbe
   // Main content chooser
   // ─────────────────────────────────────────────────────
 
-  const renderContent = () => {
+  const WidgetContent = () => {
     if (widget.type === "editable") {
       return (
         <div className="mt-2 border border-dashed border-neutral-300 rounded-lg p-3">
@@ -714,7 +801,7 @@ function WidgetCard({ widget, onRemove }: { widget: Widget; onRemove: (id: numbe
   const renderStatusBadge = () => {
     if (widget.type === "editable") {
       return (
-        <span className="text-[10px] px-2 py-0.5 rounded-full border border-neutral-300 text-neutral-500">
+        <span className={`text-[10px] px-2 py-0.5 rounded-full border ${tone.badge}`}>
           Local
         </span>
       );
@@ -722,7 +809,7 @@ function WidgetCard({ widget, onRemove }: { widget: Widget; onRemove: (id: numbe
 
     if (status.state === "idle") {
       return (
-        <span className="text-[10px] px-2 py-0.5 rounded-full border border-neutral-300 text-neutral-500">
+        <span className={`text-[10px] px-2 py-0.5 rounded-full border ${tone.badge}`}>
           No source
         </span>
       );
@@ -752,11 +839,16 @@ function WidgetCard({ widget, onRemove }: { widget: Widget; onRemove: (id: numbe
   };
 
   return (
-    <div className="border border-neutral-200 rounded-xl p-4 flex flex-col gap-2 bg-white">
+    <div
+      className={`rounded-xl p-4 flex flex-col gap-2 shadow-sm border ${tone.container}`}
+      data-widget-type={widget.type}
+    >
       <div className="flex items-center justify-between gap-2">
         <div className="flex flex-col gap-0.5">
           <h2 className="text-sm font-medium">{widget.title}</h2>
-          <p className="text-[11px] text-neutral-500 uppercase tracking-[0.14em]">
+          <p
+            className={`text-[11px] uppercase tracking-[0.14em] ${tone.accent}`}
+          >
             {labelForType(widget.type)}
           </p>
         </div>
@@ -793,7 +885,7 @@ function WidgetCard({ widget, onRemove }: { widget: Widget; onRemove: (id: numbe
         <p className="mt-1 text-[11px] text-neutral-500">{status.message}</p>
       )}
 
-      {renderContent()}
+      <WidgetContent />
 
       {widget.apiUrl && widget.type !== "editable" && (
         <p className="mt-1 text-[10px] text-neutral-400 break-all">
@@ -809,28 +901,58 @@ function WidgetCard({ widget, onRemove }: { widget: Widget; onRemove: (id: numbe
 // ─────────────────────────────────────────────────────────
 
 export default function Dashboard() {
-  const [menuItems, setMenuItems] = useState<MenuItem[]>([
-    { id: 1, label: "Overview" },
-    { id: 2, label: "Analytics" },
-    { id: 3, label: "Settings" },
-  ]);
-
-  const [widgets, setWidgets] = useState<Widget[]>([
-    { id: 1, title: "Traffic (auto)", type: "auto" },
-    { id: 2, title: "Notes (editable)", type: "editable" },
-  ]);
+  const [menuItems, setMenuItems] = useState<MenuItem[]>(defaultLayout.menuItems);
+  const [widgetSets, setWidgetSets] = useState<Record<number, Widget[]>>(
+    defaultLayout.widgetSets
+  );
+  const [activeMenuId, setActiveMenuId] = useState<number>(
+    defaultLayout.menuItems[0]?.id ?? 1
+  );
+  const [branding, setBranding] = useState<Branding>(defaultLayout.branding);
 
   const [newMenuLabel, setNewMenuLabel] = useState("");
   const [newWidgetTitle, setNewWidgetTitle] = useState("");
   const [newWidgetType, setNewWidgetType] = useState<WidgetType>("auto");
   const [newWidgetApiUrl, setNewWidgetApiUrl] = useState("");
+  const [isLoadingLayout, setIsLoadingLayout] = useState(true);
+  const [layoutError, setLayoutError] = useState<string | null>(null);
+  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [menuModalItem, setMenuModalItem] = useState<MenuItem | null>(null);
+  const [editMenuLabel, setEditMenuLabel] = useState("");
+  const [isBrandingModalOpen, setIsBrandingModalOpen] = useState(false);
+  const [brandSettings, setBrandSettings] = useState<BrandSetupData>(defaultBrandSettings);
+
+  const accentColor = branding.accentColor || "#000000";
+  const accentTextStyle = { color: accentColor };
+  const accentBorderStyle = { borderColor: accentColor, color: accentColor };
+  const accentSolidStyle = { backgroundColor: accentColor, borderColor: accentColor, color: "#fff" };
+
+  const syncBrandingFromBrandSettings = (settings: BrandSetupData) => {
+    setBranding((prev) => ({
+      ...prev,
+      name: settings.brandName || prev.name,
+      subtitle: settings.tagline || prev.subtitle,
+      accentColor: settings.brandColor || prev.accentColor,
+      initials: settings.brandName ? deriveInitials(settings.brandName) : prev.initials,
+    }));
+  };
+
+  const syncBrandSettingsFromBranding = (): BrandSetupData => ({
+    ...brandSettings,
+    brandName: branding.name,
+    brandColor: branding.accentColor,
+    tagline: branding.subtitle,
+  });
 
   const handleAddMenuItem = (e: FormEvent) => {
     e.preventDefault();
     const trimmed = newMenuLabel.trim();
     if (!trimmed) return;
 
-    setMenuItems((prev) => [...prev, { id: Date.now(), label: trimmed }]);
+    const id = Date.now();
+    setMenuItems((prev) => [...prev, { id, label: trimmed }]);
+    setWidgetSets((prev) => ({ ...prev, [id]: [] }));
+    setActiveMenuId(id);
     setNewMenuLabel("");
   };
 
@@ -838,10 +960,12 @@ export default function Dashboard() {
     e.preventDefault();
     const title = newWidgetTitle.trim();
     if (!title) return;
+    const menuId = activeMenuId;
+    if (!menuId) return;
 
-    setWidgets((prev) => [
-      ...prev,
-      {
+    setWidgetSets((prev) => {
+      const nextWidgets = prev[menuId] ?? [];
+      const newWidget: Widget = {
         id: Date.now(),
         title,
         type: newWidgetType,
@@ -849,15 +973,169 @@ export default function Dashboard() {
           newWidgetType === "editable"
             ? undefined
             : newWidgetApiUrl.trim() || undefined,
-      },
-    ]);
+      };
+
+      return { ...prev, [menuId]: [...nextWidgets, newWidget] };
+    });
 
     setNewWidgetTitle("");
     setNewWidgetApiUrl("");
   };
 
+  const handleBrandingChange = (key: keyof Branding, value: string) => {
+    setBranding((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const persistBranding = async () => {
+    const nextBrandSettings = syncBrandSettingsFromBranding();
+    setBrandSettings(nextBrandSettings);
+    try {
+      await Promise.all([
+        fetch("/api/brand", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(nextBrandSettings),
+        }),
+        fetch("/api/dashboard", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ menuItems, widgetSets, branding }),
+        }),
+      ]);
+    } catch {
+      // ignore; header save button still allows retry
+    }
+  };
+
+  const openMenuModal = (item: MenuItem) => {
+    setMenuModalItem(item);
+    setEditMenuLabel(item.label);
+  };
+
+  const closeMenuModal = () => {
+    setMenuModalItem(null);
+    setEditMenuLabel("");
+  };
+
+  const handleUpdateMenuLabel = () => {
+    if (!menuModalItem) return;
+    const trimmed = editMenuLabel.trim();
+    if (!trimmed) return;
+
+    setMenuItems((prev) =>
+      prev.map((item) => (item.id === menuModalItem.id ? { ...item, label: trimmed } : item))
+    );
+    closeMenuModal();
+  };
+
+  const handleDeleteMenuItem = () => {
+    if (!menuModalItem) return;
+    const targetId = menuModalItem.id;
+
+    setMenuItems((prev) => {
+      const next = prev.filter((item) => item.id !== targetId);
+      setActiveMenuId((current) => {
+        if (current !== targetId) return current;
+        return next[0]?.id ?? current;
+      });
+      return next;
+    });
+
+    setWidgetSets((prev) => {
+      const next = { ...prev };
+      delete next[targetId];
+      return next;
+    });
+
+    closeMenuModal();
+  };
+
   const handleRemoveWidget = (id: number) => {
-    setWidgets((prev) => prev.filter((w) => w.id !== id));
+    const menuId = activeMenuId;
+    if (!menuId) return;
+    setWidgetSets((prev) => ({
+      ...prev,
+      [menuId]: (prev[menuId] ?? []).filter((w) => w.id !== id),
+    }));
+  };
+
+  useEffect(() => {
+    let active = true;
+    const fetchLayout = async () => {
+      setIsLoadingLayout(true);
+      try {
+        const res = await fetch("/api/dashboard", { cache: "no-store" });
+        if (!res.ok) {
+          throw new Error("Failed to load saved layout");
+        }
+        const json = (await res.json()) as DashboardLayout;
+        if (!active) return;
+        setMenuItems(json.menuItems ?? defaultLayout.menuItems);
+        setWidgetSets(json.widgetSets ?? defaultLayout.widgetSets);
+        setBranding(json.branding ?? defaultLayout.branding);
+        setActiveMenuId(json.menuItems?.[0]?.id ?? defaultLayout.menuItems[0].id);
+        setLayoutError(null);
+      } catch (err) {
+        if (!active) return;
+        setLayoutError("Unable to load saved layout; using defaults for now.");
+        setMenuItems(defaultLayout.menuItems);
+        setWidgetSets(defaultLayout.widgetSets);
+        setBranding(defaultLayout.branding);
+        setActiveMenuId(defaultLayout.menuItems[0]?.id ?? 1);
+      } finally {
+        if (active) setIsLoadingLayout(false);
+      }
+    };
+
+    const fetchBrandSettings = async () => {
+      try {
+        const res = await fetch("/api/brand", { cache: "no-store" });
+        if (!res.ok) return;
+        const data = (await res.json()) as BrandSetupData;
+        setBrandSettings(data);
+        syncBrandingFromBrandSettings(data);
+      } catch {
+        // ignore; fall back to defaults/layout branding
+      }
+    };
+
+    fetchLayout().then(fetchBrandSettings);
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const handleSaveLayout = async () => {
+    setSaveState("saving");
+    try {
+      const nextBrandSettings = syncBrandSettingsFromBranding();
+      setBrandSettings(nextBrandSettings);
+
+      // Save brand settings in parallel so onboarding matches dashboard
+      const brandPromise = fetch("/api/brand", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(nextBrandSettings),
+      });
+
+      const res = await fetch("/api/dashboard", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ menuItems, widgetSets, branding }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to save layout");
+      }
+
+      await brandPromise;
+
+      setSaveState("saved");
+      setLayoutError(null);
+      setTimeout(() => setSaveState("idle"), 1500);
+    } catch (err) {
+      setSaveState("error");
+    }
   };
 
   const typeGroups: { label: string; types: WidgetType[] }[] = [
@@ -885,34 +1163,66 @@ export default function Dashboard() {
     },
   ];
 
+  const widgets = widgetSets[activeMenuId] ?? [];
+
+  useEffect(() => {
+    if (!menuItems.find((item) => item.id === activeMenuId)) {
+      setActiveMenuId(menuItems[0]?.id ?? activeMenuId);
+    }
+  }, [menuItems, activeMenuId]);
+
   return (
     <div className="h-screen w-screen bg-white text-black flex overflow-hidden">
       {/* Sidebar */}
       <aside className="h-full w-64 border-r border-neutral-200 flex flex-col">
         <div className="px-4 py-4 border-b border-neutral-200 flex items-center gap-2">
-          <div className="h-7 w-7 rounded-md border border-black flex items-center justify-center text-xs font-semibold">
-            DB
+          <div
+            className="h-7 w-7 rounded-md border flex items-center justify-center text-xs font-semibold"
+            style={accentBorderStyle}
+          >
+            {branding.initials || "DB"}
           </div>
           <div className="flex flex-col">
             <span className="text-xs font-medium tracking-[0.16em] uppercase text-neutral-500">
-              Dashboard
+              {branding.name}
             </span>
-            <span className="text-xs text-neutral-500">Headless admin</span>
+            <span className="text-xs text-neutral-500">{branding.subtitle}</span>
           </div>
         </div>
 
         {/* Menu list */}
         <div className="flex-1 overflow-y-auto">
           <nav className="px-3 py-4 space-y-1">
-            {menuItems.map((item) => (
-              <button
-                key={item.id}
-                className="w-full flex items-center justify-between text-left text-sm px-3 py-2 rounded-lg hover:bg-neutral-100"
-              >
-                <span>{item.label}</span>
-                <span className="text-[10px] text-neutral-400">•••</span>
-              </button>
-            ))}
+            {menuItems.map((item) => {
+              const isActive = activeMenuId === item.id;
+              return (
+                <div
+                  key={item.id}
+                  className={`w-full flex items-center gap-2 text-left text-sm px-3 py-2 rounded-lg transition-colors ${
+                    isActive ? "text-white" : "hover:bg-neutral-100 text-neutral-900"
+                  }`}
+                  style={isActive ? { backgroundColor: accentColor } : undefined}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setActiveMenuId(item.id)}
+                    className="flex-1 text-left"
+                  >
+                    <span>{item.label}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => openMenuModal(item)}
+                    className={`text-[12px] px-1 ${
+                      isActive ? "text-white/80 hover:text-white" : "text-neutral-400 hover:text-black"
+                    }`}
+                    aria-label={`Edit or delete ${item.label}`}
+                  >
+                    ...
+                  </button>
+                </div>
+              );
+            })}
           </nav>
         </div>
 
@@ -931,7 +1241,8 @@ export default function Dashboard() {
             />
             <button
               type="submit"
-              className="w-full text-xs border border-black rounded-full py-1.5 hover:bg-black hover:text-white transition-colors"
+              className="w-full text-xs border rounded-full py-1.5 transition-opacity hover:opacity-90"
+              style={accentSolidStyle}
             >
               Add
             </button>
@@ -944,14 +1255,41 @@ export default function Dashboard() {
         {/* Top bar */}
         <header className="h-14 border-b border-neutral-200 flex items-center justify-between px-6">
           <div className="flex items-center gap-2">
-            <h1 className="text-sm font-medium">Admin dashboard</h1>
-            <span className="text-[11px] text-neutral-400 border border-dashed border-neutral-300 rounded-full px-2 py-0.5">
-              Headless
+            <h1 className="text-sm font-medium">{branding.name}</h1>
+            <span
+              className="text-[11px] border border-dashed rounded-full px-2 py-0.5"
+              style={{ borderColor: accentColor, color: accentColor }}
+            >
+              {branding.subtitle || "Headless"}
             </span>
           </div>
           <div className="flex items-center gap-3 text-xs text-neutral-500">
-            <button className="border border-neutral-300 rounded-full px-3 py-1 hover:bg-neutral-100">
-              Save layout (hook to persistence later)
+            <button
+              type="button"
+              onClick={() => setIsBrandingModalOpen(true)}
+              className="border rounded-full px-3 py-1 hover:opacity-90"
+              style={{ borderColor: accentColor, color: accentColor }}
+            >
+              Branding
+            </button>
+            <button
+              type="button"
+              onClick={handleSaveLayout}
+              disabled={saveState === "saving" || isLoadingLayout}
+              className={`border border-neutral-300 rounded-full px-3 py-1 transition-colors ${
+                saveState === "saving" || isLoadingLayout
+                  ? "opacity-60 cursor-not-allowed"
+                  : "hover:bg-neutral-100"
+              }`}
+              style={{ borderColor: accentColor, color: accentColor }}
+            >
+              {saveState === "saving"
+                ? "Saving..."
+                : saveState === "saved"
+                ? "Saved"
+                : saveState === "error"
+                ? "Retry save"
+                : "Save layout"}
             </button>
             <div className="h-7 w-7 rounded-full border border-neutral-300 flex items-center justify-center text-[11px]">
               U
@@ -973,12 +1311,31 @@ export default function Dashboard() {
                 </p>
               </div>
             </div>
+            {layoutError && (
+              <p className="text-[11px] text-red-600 mb-2">{layoutError}</p>
+            )}
+            {saveState === "saved" && (
+              <p className="text-[11px] text-emerald-600 mb-2">Layout saved to persistence.</p>
+            )}
+            {saveState === "error" && (
+              <p className="text-[11px] text-red-600 mb-2">
+                Save failed. Please check the API route and try again.
+              </p>
+            )}
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-              {widgets.map((widget) => (
-                <WidgetCard key={widget.id} widget={widget} onRemove={handleRemoveWidget} />
-              ))}
-            </div>
+            {isLoadingLayout ? (
+              <p className="text-[11px] text-neutral-500">Loading saved layout...</p>
+            ) : widgets.length === 0 ? (
+              <p className="text-[11px] text-neutral-500">
+                No widgets yet for this menu. Add one to start a fresh view.
+              </p>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+                {widgets.map((widget) => (
+                  <WidgetCard key={widget.id} widget={widget} onRemove={handleRemoveWidget} />
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Add widget panel */}
@@ -1026,9 +1383,10 @@ export default function Dashboard() {
                             onClick={() => setNewWidgetType(type)}
                             className={`border rounded-full px-2.5 py-1 ${
                               newWidgetType === type
-                                ? "border-black bg-black text-white"
+                                ? "text-white"
                                 : "border-neutral-300 text-neutral-600 hover:bg-neutral-100"
                             }`}
+                            style={newWidgetType === type ? accentSolidStyle : undefined}
                           >
                             {labelForType(type)}
                           </button>
@@ -1064,7 +1422,8 @@ export default function Dashboard() {
 
                 <button
                   type="submit"
-                  className="w-full text-xs border border-black rounded-full py-1.5 mt-1 hover:bg-black hover:text-white transition-colors"
+                  className="w-full text-xs border rounded-full py-1.5 mt-1 transition-opacity hover:opacity-90"
+                  style={accentSolidStyle}
                 >
                   Add widget
                 </button>
@@ -1073,6 +1432,171 @@ export default function Dashboard() {
           </aside>
         </section>
       </main>
+
+      {menuModalItem && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
+          onClick={closeMenuModal}
+        >
+          <div
+            className="w-full max-w-sm bg-white rounded-xl shadow-xl p-5 space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-2">
+              <div className="space-y-0.5">
+                <p className="text-[10px] uppercase tracking-[0.16em] text-neutral-500">Menu</p>
+                <p className="text-sm font-semibold">{menuModalItem.label}</p>
+              </div>
+              <button
+                type="button"
+                onClick={closeMenuModal}
+                className="text-[12px] text-neutral-400 hover:text-black px-1"
+                aria-label="Close menu actions"
+              >
+                x
+              </button>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[11px] font-medium text-neutral-700">Rename</label>
+              <input
+                type="text"
+                value={editMenuLabel}
+                onChange={(e) => setEditMenuLabel(e.target.value)}
+                className="w-full border border-neutral-300 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-black"
+              />
+              <div className="flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={closeMenuModal}
+                  className="text-[11px] px-3 py-1 rounded-full border border-neutral-200 hover:bg-neutral-100"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleUpdateMenuLabel}
+                  disabled={!editMenuLabel.trim()}
+                  className={`text-[11px] px-3 py-1 rounded-full border ${
+                    editMenuLabel.trim()
+                      ? "hover:opacity-90"
+                      : "border-neutral-200 text-neutral-400 bg-neutral-100 cursor-not-allowed"
+                  }`}
+                  style={editMenuLabel.trim() ? accentSolidStyle : undefined}
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+
+            <div className="border-t border-neutral-200 pt-3 space-y-2">
+              <div>
+                <p className="text-[11px] font-medium text-neutral-700">Delete menu</p>
+                <p className="text-[11px] text-neutral-500">
+                  Remove this menu and all widgets inside it.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={handleDeleteMenuItem}
+                className="w-full text-[11px] px-3 py-2 rounded-lg border border-red-200 text-red-600 hover:bg-red-50"
+              >
+                Delete menu
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isBrandingModalOpen && (
+        <div
+          className="fixed inset-0 z-40 flex items-center justify-center bg-black/50 px-4"
+          onClick={() => setIsBrandingModalOpen(false)}
+        >
+          <div
+            className="w-full max-w-md bg-white rounded-xl shadow-xl p-5 space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-2">
+              <div className="space-y-0.5">
+                <p className="text-[10px] uppercase tracking-[0.16em] text-neutral-500">Branding</p>
+                <p className="text-sm font-semibold">Update dashboard identity</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsBrandingModalOpen(false)}
+                className="text-[12px] text-neutral-400 hover:text-black px-1"
+                aria-label="Close branding modal"
+              >
+                x
+              </button>
+            </div>
+
+            <div className="space-y-2 text-xs">
+              <div className="space-y-1">
+                <label className="text-[11px] font-medium text-neutral-700">Name</label>
+                <input
+                  type="text"
+                  value={branding.name}
+                  onChange={(e) => handleBrandingChange("name", e.target.value)}
+                  className="w-full border border-neutral-300 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-black"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[11px] font-medium text-neutral-700">Subtitle</label>
+                <input
+                  type="text"
+                  value={branding.subtitle}
+                  onChange={(e) => handleBrandingChange("subtitle", e.target.value)}
+                  className="w-full border border-neutral-300 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-black"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <label className="text-[11px] font-medium text-neutral-700">Initials</label>
+                  <input
+                    type="text"
+                    maxLength={4}
+                    value={branding.initials}
+                    onChange={(e) => handleBrandingChange("initials", e.target.value.toUpperCase())}
+                    className="w-full border border-neutral-300 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-black"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[11px] font-medium text-neutral-700">Accent</label>
+                  <input
+                    type="color"
+                    value={branding.accentColor}
+                    onChange={(e) => handleBrandingChange("accentColor", e.target.value)}
+                    className="w-full h-9 border border-neutral-300 rounded-lg p-1 bg-white"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setIsBrandingModalOpen(false)}
+                className="text-[11px] px-3 py-1 rounded-full border border-neutral-200 hover:bg-neutral-100"
+              >
+                Close
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  await persistBranding();
+                  setIsBrandingModalOpen(false);
+                }}
+                className="text-[11px] px-3 py-1 rounded-full border hover:opacity-90"
+                style={accentSolidStyle}
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

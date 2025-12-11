@@ -9,36 +9,96 @@ type MenuItem = {
   label: string;
 };
 
+type WidgetType =
+  | "auto"
+  | "stats"
+  | "text"
+  | "list"
+  | "raw"
+  | "weather"
+  | "stocks"
+  | "exchangeRates"
+  | "movies"
+  | "books"
+  | "aiModels"
+  | "news"
+  | "sports"
+  | "gaming"
+  | "editable";
+
 type Widget = {
   id: number;
   title: string;
-  type: "text" | "stats";
+  type: WidgetType;
+  apiUrl?: string;
+};
+
+type Branding = {
+  name: string;
+  subtitle: string;
+  initials: string;
+  accentColor: string;
 };
 
 type DashboardLayout = {
   menuItems: MenuItem[];
-  widgets: Widget[];
+  widgetSets: Record<number, Widget[]>;
+  branding: Branding;
 };
 
 const layoutPath = path.join(process.cwd(), "data", "dashboardLayout.json");
+const defaultLayout: DashboardLayout = {
+  menuItems: [
+    { id: 1, label: "Overview" },
+    { id: 2, label: "Analytics" },
+    { id: 3, label: "Settings" },
+  ],
+  widgetSets: {
+    1: [
+      { id: 1, title: "Traffic (auto)", type: "auto" },
+      { id: 2, title: "Notes (editable)", type: "editable" },
+    ],
+  },
+  branding: {
+    name: "Admin dashboard",
+    subtitle: "Headless admin",
+    initials: "DB",
+    accentColor: "#000000",
+  },
+};
+
+function toNewLayout(raw: any): DashboardLayout {
+  // Already in new shape
+  if (raw && raw.widgetSets) {
+    return {
+      menuItems: raw.menuItems ?? defaultLayout.menuItems,
+      widgetSets: raw.widgetSets ?? defaultLayout.widgetSets,
+      branding: raw.branding ?? defaultLayout.branding,
+    };
+  }
+
+  // Legacy shape with a single widgets array
+  if (raw && raw.widgets) {
+    const menuItems = raw.menuItems ?? defaultLayout.menuItems;
+    const firstMenuId = menuItems[0]?.id ?? 1;
+    return {
+      menuItems,
+      widgetSets: { [firstMenuId]: raw.widgets },
+      branding: raw.branding ?? defaultLayout.branding,
+    };
+  }
+
+  return defaultLayout;
+}
 
 async function readLayout(): Promise<DashboardLayout> {
   try {
     const raw = await fs.readFile(layoutPath, "utf-8");
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw);
+    return toNewLayout(parsed);
   } catch {
     // fallback if file doesn't exist or is invalid
-    return {
-      menuItems: [
-        { id: 1, label: "Overview" },
-        { id: 2, label: "Analytics" },
-        { id: 3, label: "Settings" },
-      ],
-      widgets: [
-        { id: 1, title: "Traffic", type: "stats" },
-        { id: 2, title: "Notes", type: "text" },
-      ],
-    };
+    return defaultLayout;
   }
 }
 
@@ -56,9 +116,19 @@ export async function POST(req: Request) {
   const body = (await req.json()) as Partial<DashboardLayout>;
   const current = await readLayout();
 
+  const incomingWidgetSets =
+    (body as any).widgetSets ??
+    ((body as any).widgets
+      ? {
+          [(body.menuItems ?? current.menuItems ?? defaultLayout.menuItems)[0]?.id ?? 1]:
+            (body as any).widgets,
+        }
+      : undefined);
+
   const merged: DashboardLayout = {
     menuItems: body.menuItems ?? current.menuItems,
-    widgets: body.widgets ?? current.widgets,
+    widgetSets: incomingWidgetSets ?? current.widgetSets,
+    branding: (body as any).branding ?? current.branding ?? defaultLayout.branding,
   };
 
   await writeLayout(merged);

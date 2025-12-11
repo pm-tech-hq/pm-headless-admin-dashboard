@@ -7,32 +7,16 @@
     {
       "id": 2,
       "label": "Analytics"
-    },
-    {
-      "id": 3,
-      "label": "Settings"
     }
   ],
-  "widgets": [
-    {
-      "id": 1,
-      "title": "Traffic",
-      "type": "stats"
-    },
-    {
-      "id": 2,
-      "title": "Notes",
-      "type": "text"
-    },
-    {
-      "id": 1764983934389,
-      "title": "hjghjghj",
-      "type": "stats"
-    },
-    {
-      "id": 1764984191261,
-      "title": "jghjghj",
-      "type": "text"
-    }
-  ]
+  "widgetSets": {
+    "1": [],
+    "2": []
+  },
+  "branding": {
+    "name": "PM",
+    "subtitle": "Headless admin",
+    "initials": "P",
+    "accentColor": "#ff00d0"
+  }
 }
