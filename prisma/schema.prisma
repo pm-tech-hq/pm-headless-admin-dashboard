@@ -1,0 +1,407 @@
+// Headless Admin Dashboard Platform - Database Schema
+// Prisma schema for SQLite (portable, can migrate to PostgreSQL)
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// ============= Authentication =============
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String
+  passwordHash  String?
+
+  // Profile
+  avatar        String?
+  timezone      String?
+  locale        String    @default("en")
+
+  // Status
+  isActive      Boolean   @default(true)
+  isVerified    Boolean   @default(false)
+  lastLoginAt   DateTime?
+
+  // SSO
+  ssoProvider   String?
+  ssoId         String?
+
+  // Timestamps
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  sessions      Session[]
+  userRoles     UserRole[]
+  auditLogs     AuditLog[]
+  dataSources   DataSource[]
+  dashboards    Dashboard[]
+  accounts      Account[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  // Device info
+  userAgent    String?
+  ipAddress    String?
+
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Role {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  isSystem    Boolean  @default(false)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  userRoles   UserRole[]
+  permissions Permission[]
+}
+
+model UserRole {
+  id        String   @id @default(cuid())
+  userId    String
+  roleId    String
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roleId])
+}
+
+model Permission {
+  id           String  @id @default(cuid())
+  roleId       String
+  resource     String  // ResourceType: data_source, schema, widget, menu, user, role, plugin, settings, crud
+  resourceId   String? // Specific resource or null for all
+  action       String  // ActionType: create, read, update, delete, execute, manage, *
+  conditions   String? // JSON string for conditions
+
+  role         Role    @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@index([roleId])
+  @@index([resource])
+}
+
+// ============= Data Sources =============
+
+model DataSource {
+  id                    String   @id @default(cuid())
+  name                  String
+  description           String?
+  type                  String   // DataSourceType: rest, graphql, postgres, mysql, sqlite, mongodb
+
+  // Connection
+  baseUrl               String?
+  connectionString      String?  // Encrypted
+  host                  String?
+  port                  Int?
+  database              String?
+
+  // Auth (encrypted JSON)
+  authConfig            String   @default("{\"type\":\"none\"}")
+
+  // Health
+  healthCheckEndpoint   String?
+  healthCheckInterval   Int?     @default(60000)
+  lastHealthCheck       DateTime?
+  healthStatus          String   @default("unknown")
+
+  // Rate limiting
+  rateLimitRequests     Int?
+  rateLimitWindow       Int?
+
+  // Metadata
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  createdById           String
+
+  createdBy             User     @relation(fields: [createdById], references: [id])
+  endpoints             DataSourceEndpoint[]
+  schemas               Schema[]
+  widgets               Widget[]
+}
+
+model DataSourceEndpoint {
+  id              String   @id @default(cuid())
+  dataSourceId    String
+  name            String
+  path            String
+  method          String   @default("GET")
+  description     String?
+
+  // Request config (JSON)
+  headers         String?
+  queryParams     String?
+  bodyTemplate    String?
+
+  // Pagination config (JSON)
+  paginationType  String?  // offset, cursor, page, none
+  paginationConfig String?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  dataSource      DataSource @relation(fields: [dataSourceId], references: [id], onDelete: Cascade)
+  schemas         Schema[]
+}
+
+// ============= Schemas =============
+
+model Schema {
+  id              String   @id @default(cuid())
+  name            String
+  description     String?
+  dataSourceId    String
+  endpointId      String?
+
+  // Fields (JSON array of SchemaField)
+  fields          String   @default("[]")
+
+  // Detection metadata
+  detectedAt      DateTime @default(now())
+  sampleSize      Int      @default(0)
+  autoDetected    Boolean  @default(true)
+
+  // CRUD
+  crudEnabled     Boolean  @default(false)
+  crudEndpoints   String?  // JSON
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  dataSource      DataSource          @relation(fields: [dataSourceId], references: [id], onDelete: Cascade)
+  endpoint        DataSourceEndpoint? @relation(fields: [endpointId], references: [id])
+
+  sourceRelations SchemaRelationship[] @relation("SourceSchema")
+  targetRelations SchemaRelationship[] @relation("TargetSchema")
+  crudConfigs     CrudConfig[]
+  widgets         Widget[]
+}
+
+model SchemaRelationship {
+  id             String @id @default(cuid())
+  name           String
+  sourceSchemaId String
+  sourceField    String
+  targetSchemaId String
+  targetField    String
+  type           String // one-to-one, one-to-many, many-to-many
+
+  sourceSchema   Schema @relation("SourceSchema", fields: [sourceSchemaId], references: [id], onDelete: Cascade)
+  targetSchema   Schema @relation("TargetSchema", fields: [targetSchemaId], references: [id], onDelete: Cascade)
+}
+
+// ============= CRUD =============
+
+model CrudConfig {
+  id            String  @id @default(cuid())
+  schemaId      String  @unique
+
+  enableCreate  Boolean @default(true)
+  enableRead    Boolean @default(true)
+  enableUpdate  Boolean @default(true)
+  enableDelete  Boolean @default(true)
+  enableBulk    Boolean @default(true)
+
+  // Field configs (JSON)
+  fields        String  @default("[]")
+
+  // Validation rules (JSON)
+  validationRules String @default("[]")
+
+  // Permissions (JSON)
+  permissions   String  @default("{}")
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  schema        Schema   @relation(fields: [schemaId], references: [id], onDelete: Cascade)
+}
+
+// ============= Dashboards & Widgets =============
+
+model Dashboard {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+
+  // Branding (JSON - name, subtitle, initials, accentColor)
+  branding    String   @default("{}")
+
+  // Ownership
+  createdById String
+  isPublic    Boolean  @default(false)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  createdBy   User     @relation(fields: [createdById], references: [id])
+  menuItems   MenuItem[]
+}
+
+model MenuItem {
+  id          String   @id @default(cuid())
+  dashboardId String
+  label       String
+  icon        String?
+  order       Int      @default(0)
+  parentId    String?
+
+  dashboard   Dashboard @relation(fields: [dashboardId], references: [id], onDelete: Cascade)
+  parent      MenuItem? @relation("MenuHierarchy", fields: [parentId], references: [id])
+  children    MenuItem[] @relation("MenuHierarchy")
+  widgets     Widget[]
+
+  @@index([dashboardId])
+  @@index([parentId])
+}
+
+model Widget {
+  id              String  @id @default(cuid())
+  menuItemId      String
+  definitionId    String  // Widget type from registry: line-chart, bar-chart, data-table, stats, etc.
+  title           String
+  description     String?
+
+  // Data binding
+  dataSourceId    String?
+  schemaId        String?
+  apiUrl          String? // Direct API URL for simple widgets
+
+  // Data transformation (JSON)
+  dataMapping     String  @default("{\"type\":\"direct\"}")
+  filters         String? // JSON array of DataFilter
+  sorting         String? // JSON array of DataSort
+
+  // Configuration (JSON - widget-specific settings)
+  config          String  @default("{}")
+
+  // Layout
+  positionX       Int     @default(0)
+  positionY       Int     @default(0)
+  width           Int     @default(1)
+  height          Int     @default(1)
+
+  // Refresh
+  autoRefresh     Boolean @default(false)
+  refreshInterval Int?    @default(60000)
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  menuItem        MenuItem    @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+  dataSource      DataSource? @relation(fields: [dataSourceId], references: [id])
+  schema          Schema?     @relation(fields: [schemaId], references: [id])
+
+  @@index([menuItemId])
+  @@index([dataSourceId])
+}
+
+// ============= Plugins =============
+
+model Plugin {
+  id          String   @id @default(cuid())
+
+  // Manifest (JSON - PluginManifest)
+  manifest    String
+
+  // Status
+  isInstalled Boolean  @default(false)
+  isEnabled   Boolean  @default(false)
+  installedAt DateTime?
+
+  // Configuration (JSON)
+  config      String   @default("{}")
+
+  // Runtime errors
+  errors      String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ============= Audit =============
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  userId      String
+  action      String   // login, create, update, delete, etc.
+  resource    String   // ResourceType
+  resourceId  String?
+
+  // Details (JSON)
+  details     String?
+
+  ipAddress   String?
+  userAgent   String?
+
+  timestamp   DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([resource])
+  @@index([timestamp])
+}
+
+// ============= Branding (Global Settings) =============
+
+model BrandSettings {
+  id              String  @id @default("default")
+  brandName       String  @default("")
+  website         String  @default("")
+  brandColor      String  @default("#000000")
+  tagline         String  @default("")
+  description     String  @default("")
+  logoUrl         String?
+
+  // Extended branding
+  primaryColor    String  @default("#000000")
+  secondaryColor  String  @default("#666666")
+  accentColor     String  @default("#0066cc")
+  fontFamily      String  @default("system-ui")
+  darkModeDefault Boolean @default(false)
+
+  updatedAt       DateTime @updatedAt
+}
