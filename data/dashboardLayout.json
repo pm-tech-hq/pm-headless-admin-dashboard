@@ -1,0 +1,22 @@
+{
+  "menuItems": [
+    {
+      "id": 1,
+      "label": "Overview"
+    },
+    {
+      "id": 2,
+      "label": "Analytics"
+    }
+  ],
+  "widgetSets": {
+    "1": [],
+    "2": []
+  },
+  "branding": {
+    "name": "PM",
+    "subtitle": "Headless admin",
+    "initials": "P",
+    "accentColor": "#000000"
+  }
+}
