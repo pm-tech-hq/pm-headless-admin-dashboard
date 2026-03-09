@@ -1,14 +1,14 @@
 {
-  "name": "pm-headless-admin-dashboard",
+  "name": "pm-lyra",
   "version": "1.0.0",
   "description": "A customizable headless admin dashboard that works with any data source.",
-  "homepage": "https://github.com/pm-tech-hq/pm-headless-admin-dashboard#readme",
+  "homepage": "https://github.com/pm-tech-hq/pm-lyra#readme",
   "bugs": {
-    "url": "https://github.com/pm-tech-hq/pm-headless-admin-dashboard/issues"
+    "url": "https://github.com/pm-tech-hq/pm-lyra/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/pm-tech-hq/pm-headless-admin-dashboard.git"
+    "url": "git+https://github.com/pm-tech-hq/pm-lyra.git"
   },
   "license": "ISC",
   "author": "pm-tech-hq",

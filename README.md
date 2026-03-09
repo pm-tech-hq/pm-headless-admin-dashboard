@@ -1,4 +1,4 @@
-# PM Headless Admin Dashboard
+# PM Lyra
 
 A headless admin dashboard platform that connects to any API or data source and automatically detects the structure and type of data it receives. It generates intelligent visualizations and operational interfaces using a large library of widgets, enabling users to monitor, analyze, and interact with diverse systems from a single control surface.
 
@@ -138,8 +138,8 @@ src/
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/pm-tech-hq/pm-headless-admin-dashboard.git
-cd pm-headless-admin-dashboard
+git clone https://github.com/pm-tech-hq/pm-lyra.git
+cd pm-lyra
 ```
 
 2. Install dependencies:
