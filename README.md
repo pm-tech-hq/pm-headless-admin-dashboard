@@ -312,8 +312,10 @@ Key models in Prisma:
 
 ## License
 
-This project is proprietary software. All rights reserved.
+This project is licensed under the [GNU Affero General Public License v3.0](LICENSE).
 
-## Support
+You are free to use, modify, and distribute this software under the terms of the AGPL-3.0.
+If you run a modified version as a network service, you must make your source code available.
 
-For support, please contact the PM Tech HQ team or open an issue in the repository.
+For commercial licensing (embedding OmniDash in proprietary products or SaaS),
+contact: [your email]
