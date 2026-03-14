@@ -1,7 +1,7 @@
 // Prisma Client singleton for database access
 // Uses adapter pattern for Prisma 7.x with better-sqlite3
 
-import { PrismaClient } from '@/generated/prisma';
+import { PrismaClient } from '@/generated/prisma/client';
 import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3';
 import path from 'path';
 

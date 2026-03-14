@@ -1,7 +1,7 @@
 // Database Seed Script
 // Initializes default roles and admin user
 
-import { PrismaClient } from '../src/generated/prisma';
+import { PrismaClient } from '../src/generated/prisma/client';
 import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3';
 import bcrypt from 'bcryptjs';
 import path from 'path';
