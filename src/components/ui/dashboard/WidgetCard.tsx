@@ -19,6 +19,32 @@ import {
 
 import { Widget, WidgetType } from "./types";
 
+// ── Dedicated widget components (self-fetching, interactive) ─────────────────
+import WeatherWidget from "@/components/widgets/WeatherWidget";
+import CryptoWidget from "@/components/widgets/CryptoWidget";
+import ExchangeRatesWidget from "@/components/widgets/ExchangeRatesWidget";
+import HackerNewsWidget from "@/components/widgets/HackerNewsWidget";
+import GitHubWidget from "@/components/widgets/GitHubWidget";
+import SpaceXWidget from "@/components/widgets/SpaceXWidget";
+import NASAApodWidget from "@/components/widgets/NASAApodWidget";
+import CountriesWidget from "@/components/widgets/CountriesWidget";
+import RandomUserWidget from "@/components/widgets/RandomUserWidget";
+import JokeWidget from "@/components/widgets/JokeWidget";
+import AdviceWidget from "@/components/widgets/AdviceWidget";
+import FactWidget from "@/components/widgets/FactWidget";
+import DogImageWidget from "@/components/widgets/DogImageWidget";
+import PokemonWidget from "@/components/widgets/PokemonWidget";
+import WorldTimeWidget from "@/components/widgets/WorldTimeWidget";
+import IPInfoWidget from "@/components/widgets/IPInfoWidget";
+import OpenLibraryWidget from "@/components/widgets/OpenLibraryWidget";
+
+// Types that manage their own data fetching — skip the generic API fetch
+const SELF_FETCHING_TYPES = new Set<WidgetType>([
+  "weather", "crypto", "exchangeRates", "news", "github", "spacex",
+  "nasaApod", "countries", "randomUser", "joke", "advice", "fact",
+  "dogImage", "pokemon", "worldTime", "ipInfo", "openLibrary", "books",
+]);
+
 type Shape = "array" | "object" | "string" | "number" | "boolean" | "null" | "unknown";
 type Presentation = "stats" | "list" | "text" | "raw" | "table" | "cards" | "timeline" | "progress" | "gauge" | "kpi" | "lineChart" | "barChart" | "pieChart" | "areaChart" | "donutChart";
 
@@ -335,6 +361,21 @@ const widgetTone: Partial<Record<WidgetType, typeof defaultWidgetTone>> = {
   sports: { container: "bg-lime-50 border-lime-200", badge: "border-lime-300 text-lime-700", accent: "text-lime-700" },
   gaming: { container: "bg-fuchsia-50 border-fuchsia-200", badge: "border-fuchsia-300 text-fuchsia-700", accent: "text-fuchsia-700" },
   editable: { container: "bg-neutral-50 border-neutral-200", badge: "border-neutral-300 text-neutral-700", accent: "text-neutral-700" },
+  // Dedicated widget types
+  crypto: { container: "bg-gradient-to-br from-amber-50 to-yellow-50 border-amber-200", badge: "border-amber-300 text-amber-700", accent: "text-amber-700" },
+  github: { container: "bg-gradient-to-br from-slate-50 to-gray-100 border-slate-200", badge: "border-slate-300 text-slate-700", accent: "text-slate-700" },
+  spacex: { container: "bg-gradient-to-br from-slate-900 to-slate-800 border-slate-700", badge: "border-slate-600 text-slate-300", accent: "text-slate-300" },
+  nasaApod: { container: "bg-gradient-to-br from-indigo-900 to-slate-900 border-indigo-700", badge: "border-indigo-600 text-indigo-300", accent: "text-indigo-300" },
+  countries: { container: "bg-gradient-to-br from-green-50 to-emerald-50 border-green-200", badge: "border-green-300 text-green-700", accent: "text-green-700" },
+  randomUser: { container: "bg-gradient-to-br from-violet-50 to-purple-50 border-violet-200", badge: "border-violet-300 text-violet-700", accent: "text-violet-700" },
+  joke: { container: "bg-gradient-to-br from-amber-50 to-orange-50 border-amber-200", badge: "border-amber-300 text-amber-700", accent: "text-amber-700" },
+  advice: { container: "bg-gradient-to-br from-rose-50 to-pink-50 border-rose-200", badge: "border-rose-300 text-rose-700", accent: "text-rose-700" },
+  fact: { container: "bg-gradient-to-br from-yellow-50 to-amber-50 border-yellow-200", badge: "border-yellow-300 text-yellow-700", accent: "text-yellow-700" },
+  dogImage: { container: "bg-gradient-to-br from-orange-50 to-amber-50 border-orange-200", badge: "border-orange-300 text-orange-700", accent: "text-orange-700" },
+  pokemon: { container: "bg-gradient-to-br from-yellow-50 to-red-50 border-yellow-200", badge: "border-yellow-300 text-yellow-700", accent: "text-yellow-700" },
+  worldTime: { container: "bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200", badge: "border-blue-300 text-blue-700", accent: "text-blue-700" },
+  ipInfo: { container: "bg-gradient-to-br from-cyan-50 to-sky-50 border-cyan-200", badge: "border-cyan-300 text-cyan-700", accent: "text-cyan-700" },
+  openLibrary: { container: "bg-gradient-to-br from-amber-50 to-yellow-50 border-amber-200", badge: "border-amber-300 text-amber-700", accent: "text-amber-700" },
 };
 
 const toneFor = (type: WidgetType) => widgetTone[type] ?? defaultWidgetTone;
@@ -570,7 +611,7 @@ export default function WidgetCard({ widget, onRemove }: WidgetCardProps) {
   const [editableContent, setEditableContent] = useState<string>("");
   const tone = toneFor(widget.type);
 
-  const shouldUseApi = widget.type !== "editable";
+  const shouldUseApi = widget.type !== "editable" && !SELF_FETCHING_TYPES.has(widget.type);
 
   const testApi = async () => {
     if (!shouldUseApi) {
@@ -1407,6 +1448,57 @@ export default function WidgetCard({ widget, onRemove }: WidgetCardProps) {
 
     if (typeof value !== "object" || value === null) return renderRaw(value);
 
+    // ── Open-Meteo format ────────────────────────────────────────────────────
+    if (value.current_weather) {
+      const cw = value.current_weather as any;
+      const temp: number = cw.temperature;
+      const wind: number = cw.windspeed;
+      const code: number = cw.weathercode;
+      const isDay: boolean = cw.is_day === 1;
+      const tz: string = (value.timezone as string) || "";
+
+      const wmoDesc = (c: number): string => {
+        if (c === 0) return "Clear sky";
+        if (c <= 3) return c === 1 ? "Mainly clear" : c === 2 ? "Partly cloudy" : "Overcast";
+        if (c <= 48) return "Fog";
+        if (c <= 55) return "Drizzle";
+        if (c <= 65) return "Rain";
+        if (c <= 75) return "Snow";
+        if (c <= 82) return "Rain showers";
+        if (c <= 99) return "Thunderstorm";
+        return `Code ${c}`;
+      };
+
+      const wmoEmoji = (c: number, day: boolean): string => {
+        if (c === 0) return day ? "☀️" : "🌙";
+        if (c <= 2) return day ? "⛅" : "🌙";
+        if (c <= 3) return "☁️";
+        if (c <= 48) return "🌫️";
+        if (c <= 55) return "🌦️";
+        if (c <= 65) return "🌧️";
+        if (c <= 75) return "❄️";
+        if (c <= 82) return "🌦️";
+        return "⛈️";
+      };
+
+      return (
+        <div className="mt-2 bg-gradient-to-br from-sky-50 to-blue-50 border border-sky-200 rounded-xl p-4 text-xs">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-3xl">{wmoEmoji(code, isDay)}</p>
+              <p className="text-[11px] text-sky-700 mt-1 font-medium">{wmoDesc(code)}</p>
+              {tz && <p className="text-[10px] text-neutral-500 mt-0.5">{tz.replace(/_/g, " ")}</p>}
+            </div>
+            <div className="text-right">
+              <p className="text-3xl font-bold text-sky-800">{temp.toFixed(1)}°C</p>
+              <p className="text-[11px] text-neutral-500 mt-1">Wind {wind} km/h</p>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ── OpenWeatherMap format ────────────────────────────────────────────────
     const name = (value.name as string) || "Weather";
     const main = (value as any).main || {};
     const weatherArr = (value as any).weather || [];
@@ -1429,10 +1521,10 @@ export default function WidgetCard({ widget, onRemove }: WidgetCardProps) {
           </div>
           {typeof temp === "number" && (
             <div className="text-right">
-              <p className="text-2xl font-semibold">{Math.round(temp)}\u00b0</p>
+              <p className="text-2xl font-semibold">{Math.round(temp)}&deg;</p>
               {typeof feels === "number" && (
                 <p className="text-[11px] text-neutral-500">
-                  Feels like {Math.round(feels)}\u00b0
+                  Feels like {Math.round(feels)}&deg;
                 </p>
               )}
             </div>
@@ -1535,30 +1627,41 @@ export default function WidgetCard({ widget, onRemove }: WidgetCardProps) {
     if (typeof value === "object" && value !== null) {
       const base =
         (value.base as string) ||
+        (value.base_code as string) ||
         (value.base_currency as string) ||
         "Base";
       const rates =
         (value.rates as Record<string, number>) ||
+        (value.conversion_rates as Record<string, number>) ||
         (value.data as Record<string, number>) ||
         value;
       const entries = Object.entries(rates)
         .filter(([, v]) => typeof v === "number")
-        .slice(0, 6);
+        .slice(0, 12);
+
+      // Filter to major currencies for a nicer display
+      const majorCurrencies = ["EUR", "GBP", "JPY", "AUD", "CAD", "CHF", "CNY", "INR", "MXN", "BRL", "KRW", "SGD"];
+      const prioritized = [
+        ...entries.filter(([c]) => majorCurrencies.includes(c)),
+        ...entries.filter(([c]) => !majorCurrencies.includes(c)),
+      ].slice(0, 12);
 
       return (
-        <div className="mt-2 border border-dashed border-neutral-300 rounded-lg p-3 text-xs">
-          <p className="text-[11px] text-neutral-500 mb-1">
-            Base currency: <span className="font-semibold">{base}</span>
+        <div className="mt-2 bg-gradient-to-br from-teal-50 to-emerald-50 border border-teal-200 rounded-xl p-3 text-xs">
+          <p className="text-[11px] text-teal-700 font-semibold mb-2">
+            1 {base} equals
           </p>
-          <div className="grid grid-cols-3 gap-2">
-            {entries.map(([code, rate]) => (
+          <div className="grid grid-cols-3 gap-1.5">
+            {prioritized.map(([code, rate]) => (
               <div
                 key={code}
-                className="border border-neutral-200 rounded-lg px-2 py-1"
+                className="bg-white border border-teal-100 rounded-lg px-2 py-1.5 hover:border-teal-300 transition-colors"
               >
-                <p className="text-[11px] font-semibold">{code}</p>
-                <p className="text-xs text-neutral-700">
-                  {(rate as number).toFixed(3)}
+                <p className="text-[10px] font-bold text-teal-800">{code}</p>
+                <p className="text-[11px] font-mono text-neutral-700">
+                  {(rate as number) >= 100
+                    ? Math.round(rate as number).toLocaleString()
+                    : (rate as number).toFixed(4)}
                 </p>
               </div>
             ))}
@@ -1580,8 +1683,11 @@ export default function WidgetCard({ widget, onRemove }: WidgetCardProps) {
     } else if (typeof value === "object" && value !== null) {
       items =
         (value.results as any[]) ||
+        (value.hits as any[]) ||
+        (value.docs as any[]) ||
         (value.items as any[]) ||
         (value.articles as any[]) ||
+        (value.data as any[]) ||
         [];
     }
 
@@ -1607,18 +1713,23 @@ export default function WidgetCard({ widget, onRemove }: WidgetCardProps) {
             "";
 
           let meta = "";
+          const itemUrl = (item.url as string) || (item.story_url as string) || "";
           if (kind === "movie") {
             meta =
               (item.release_date as string) ||
               (item.year && String(item.year)) ||
               "";
           } else if (kind === "book") {
+            const authors = (item.author_name as string[]) || [];
             meta =
               (item.author as string) ||
+              (authors.length > 0 ? authors.slice(0, 2).join(", ") : "") ||
               (item.authors && (item.authors as string[]).join(", ")) ||
               "";
           } else if (kind === "news") {
+            const score = item.points || item.score;
             meta =
+              (score ? `▲ ${score}` : "") ||
               (item.source?.name as string) ||
               (item.source as string) ||
               (item.publishedAt as string) ||
@@ -1637,20 +1748,32 @@ export default function WidgetCard({ widget, onRemove }: WidgetCardProps) {
             meta =
               (item.league as string) ||
               (item.competition as string) ||
+              (item.team_name as string) ||
               "";
           }
 
           return (
             <div
               key={idx}
-              className="flex flex-col gap-0.5 border-b last:border-b-0 border-neutral-200 pb-1"
+              className="flex flex-col gap-0.5 border-b last:border-b-0 border-neutral-200 pb-1.5"
             >
               <div className="flex items-center justify-between gap-2">
-                <span className="font-medium text-neutral-900 truncate">
-                  {title}
-                </span>
+                {itemUrl ? (
+                  <a
+                    href={itemUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-medium text-neutral-900 truncate hover:text-blue-600 hover:underline"
+                  >
+                    {title}
+                  </a>
+                ) : (
+                  <span className="font-medium text-neutral-900 truncate">
+                    {title}
+                  </span>
+                )}
                 {meta && (
-                  <span className="text-[10px] text-neutral-500 truncate max-w-[40%] text-right">
+                  <span className="text-[10px] text-neutral-500 shrink-0">
                     {meta}
                   </span>
                 )}
@@ -1682,6 +1805,26 @@ export default function WidgetCard({ widget, onRemove }: WidgetCardProps) {
       );
     }
 
+    // ── Dedicated self-fetching widget components ──────────────────────────
+    if (widget.type === "weather")       return <WeatherWidget />;
+    if (widget.type === "crypto")        return <CryptoWidget />;
+    if (widget.type === "exchangeRates") return <ExchangeRatesWidget />;
+    if (widget.type === "news")          return <HackerNewsWidget />;
+    if (widget.type === "github")        return <GitHubWidget />;
+    if (widget.type === "spacex")        return <SpaceXWidget />;
+    if (widget.type === "nasaApod")      return <NASAApodWidget />;
+    if (widget.type === "countries")     return <CountriesWidget />;
+    if (widget.type === "randomUser")    return <RandomUserWidget />;
+    if (widget.type === "joke")          return <JokeWidget />;
+    if (widget.type === "advice")        return <AdviceWidget />;
+    if (widget.type === "fact")          return <FactWidget />;
+    if (widget.type === "dogImage")      return <DogImageWidget />;
+    if (widget.type === "pokemon")       return <PokemonWidget />;
+    if (widget.type === "worldTime")     return <WorldTimeWidget />;
+    if (widget.type === "ipInfo")        return <IPInfoWidget />;
+    if (widget.type === "openLibrary")   return <OpenLibraryWidget />;
+    if (widget.type === "books")         return <OpenLibraryWidget />;
+
     if (status.state === "loading") {
       return (
         <div className="mt-2 text-[11px] text-neutral-500">
@@ -1707,14 +1850,10 @@ export default function WidgetCard({ widget, onRemove }: WidgetCardProps) {
     if (widget.type === "areaChart") return renderAreaChart(data);
     if (widget.type === "donutChart") return renderPieChart(data, true);
 
-    // Domain-specific types
-    if (widget.type === "weather") return renderWeather(data);
+    // Domain-specific types (still use generic API fetch path)
     if (widget.type === "stocks") return renderStocks(data);
-    if (widget.type === "exchangeRates") return renderExchangeRates(data);
     if (widget.type === "movies") return renderMediaList(data, "movie");
-    if (widget.type === "books") return renderMediaList(data, "book");
     if (widget.type === "aiModels") return renderMediaList(data, "model");
-    if (widget.type === "news") return renderMediaList(data, "news");
     if (widget.type === "sports") return renderMediaList(data, "sport");
     if (widget.type === "gaming") return renderMediaList(data, "game");
 

@@ -22,16 +22,32 @@ export type WidgetType =
   | "donutChart"
   | "map"
   | "kanban"
-  | "weather"
+  // ── Generic domain types (use inferPresentation) ──
   | "stocks"
-  | "exchangeRates"
   | "movies"
-  | "books"
   | "aiModels"
-  | "news"
   | "sports"
   | "gaming"
-  | "editable";
+  | "editable"
+  // ── Dedicated widget components ──
+  | "weather"
+  | "exchangeRates"
+  | "news"
+  | "books"
+  | "crypto"
+  | "github"
+  | "spacex"
+  | "nasaApod"
+  | "countries"
+  | "randomUser"
+  | "joke"
+  | "advice"
+  | "fact"
+  | "dogImage"
+  | "pokemon"
+  | "worldTime"
+  | "ipInfo"
+  | "openLibrary";
 
 export type Widget = {
   id: number;

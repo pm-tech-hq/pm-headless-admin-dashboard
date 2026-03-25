@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find:*)",
+      "Bash(cd:*)",
+      "WebFetch(domain:api.coindesk.com)",
+      "WebFetch(domain:api.coingecko.com)",
+      "WebFetch(domain:open.er-api.com)",
+      "WebFetch(domain:hn.algolia.com)",
+      "WebFetch(domain:api.github.com)",
+      "WebFetch(domain:api.spacexdata.com)",
+      "WebFetch(domain:api.nasa.gov)",
+      "WebFetch(domain:api.open-meteo.com)",
+      "WebFetch(domain:restcountries.com)",
+      "WebFetch(domain:randomuser.me)",
+      "WebFetch(domain:official-joke-api.appspot.com)",
+      "WebFetch(domain:api.adviceslip.com)",
+      "WebFetch(domain:catfact.ninja)",
+      "WebFetch(domain:dog.ceo)",
+      "WebFetch(domain:pokeapi.co)",
+      "WebFetch(domain:worldtimeapi.org)",
+      "WebFetch(domain:ipapi.co)",
+      "WebFetch(domain:uselessfacts.jsph.pl)",
+      "WebFetch(domain:api.openf1.org)",
+      "WebFetch(domain:openlibrary.org)"
+    ]
+  }
+}

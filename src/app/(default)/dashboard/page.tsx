@@ -16,18 +16,26 @@ import {
   Widget,
   WidgetType,
 } from "@/components/ui/dashboard/types";
+import {
+  PUBLIC_API_TEMPLATES,
+  PublicApiTemplate,
+} from "@/lib/publicApiTemplates";
 
 const defaultLayout: DashboardLayout = {
   menuItems: [
     { id: 1, label: "Overview" },
-    { id: 2, label: "Analytics" },
-    { id: 3, label: "Settings" },
+    { id: 2, label: "Finance" },
+    { id: 3, label: "Tech" },
   ],
   widgetSets: {
     1: [
-      { id: 1, title: "Traffic (auto)", type: "auto" },
-      { id: 2, title: "Notes (editable)", type: "editable" },
+      { id: 101, title: "Weather", type: "weather" },
+      { id: 102, title: "Crypto Market", type: "crypto" },
+      { id: 103, title: "Hacker News", type: "news" },
+      { id: 104, title: "Notes", type: "editable" },
     ],
+    2: [],
+    3: [],
   },
   branding: {
     name: "Admin dashboard",
@@ -44,6 +52,89 @@ const defaultBrandSettings: BrandSetupData = {
   tagline: "",
   description: "",
 };
+
+// ── Featured templates shown in the empty-state ────────────────────────────
+const FEATURED_IDS = [
+  "weather",
+  "crypto-market",
+  "hacker-news",
+  "exchange-rates-usd",
+  "github-nextjs",
+  "spacex-latest",
+  "nasa-apod",
+  "world-countries",
+  "open-library",
+  "joke",
+  "random-users",
+  "ip-info",
+];
+
+const FEATURED_TEMPLATES = PUBLIC_API_TEMPLATES.filter((t) =>
+  FEATURED_IDS.includes(t.id)
+);
+
+function EmptyState({
+  accentColor,
+  onAddTemplate,
+}: {
+  accentColor: string;
+  onAddTemplate: (t: PublicApiTemplate) => void;
+}) {
+  return (
+    <div className="py-4">
+      <div className="mb-4">
+        <p className="text-sm font-semibold text-neutral-800">
+          Start with a free public API widget
+        </p>
+        <p className="text-[11px] text-neutral-500 mt-0.5">
+          No API key required. Click any card to add it instantly.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2">
+        {FEATURED_TEMPLATES.map((template) => (
+          <button
+            key={template.id}
+            type="button"
+            onClick={() => onAddTemplate(template)}
+            className="text-left border border-neutral-200 rounded-xl p-3 bg-white hover:border-neutral-400 hover:shadow-md transition-all group"
+          >
+            <div className="flex items-center gap-2 mb-1.5">
+              <span className="text-xl">{template.emoji}</span>
+              <div>
+                <p className="text-[11px] font-semibold text-neutral-800 leading-tight">
+                  {template.title}
+                </p>
+                <span
+                  className="text-[9px] px-1.5 py-0.5 rounded font-mono"
+                  style={{
+                    backgroundColor: accentColor + "18",
+                    color: accentColor,
+                  }}
+                >
+                  {template.category}
+                </span>
+              </div>
+            </div>
+            <p className="text-[10px] text-neutral-500 leading-snug">
+              {template.description}
+            </p>
+            <p
+              className="text-[10px] mt-2 font-medium opacity-0 group-hover:opacity-100 transition-opacity"
+              style={{ color: accentColor }}
+            >
+              + Add widget
+            </p>
+          </button>
+        ))}
+      </div>
+
+      <p className="mt-4 text-[10px] text-neutral-400 text-center">
+        More templates available in the "Add widget" panel →
+      </p>
+    </div>
+  );
+}
 
 function deriveInitials(name: string) {
   const trimmed = name.trim();
@@ -214,6 +305,21 @@ export default function Dashboard() {
     }));
   };
 
+  const handleAddTemplate = (template: PublicApiTemplate) => {
+    const menuId = activeMenuId;
+    if (!menuId) return;
+    setWidgetSets((prev) => {
+      const nextWidgets = prev[menuId] ?? [];
+      const newWidget: Widget = {
+        id: Date.now(),
+        title: template.title,
+        type: template.type,
+        apiUrl: template.apiUrl,
+      };
+      return { ...prev, [menuId]: [...nextWidgets, newWidget] };
+    });
+  };
+
   useEffect(() => {
     let active = true;
     const fetchLayout = async () => {
@@ -353,9 +459,7 @@ export default function Dashboard() {
             {isLoadingLayout ? (
               <p className="text-[11px] text-neutral-500">Loading saved layout...</p>
             ) : widgets.length === 0 ? (
-              <p className="text-[11px] text-neutral-500">
-                No widgets yet for this menu. Add one to start a fresh view.
-              </p>
+              <EmptyState accentColor={accentColor} onAddTemplate={handleAddTemplate} />
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
                 {widgets.map((widget) => (
@@ -374,6 +478,7 @@ export default function Dashboard() {
             onTitleChange={setNewWidgetTitle}
             onTypeChange={setNewWidgetType}
             onApiChange={setNewWidgetApiUrl}
+            onAddTemplate={handleAddTemplate}
           />
         </section>
       </main>

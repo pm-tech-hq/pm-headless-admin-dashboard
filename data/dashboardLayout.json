@@ -10,7 +10,206 @@
     }
   ],
   "widgetSets": {
-    "1": [],
+    "1": [
+      {
+        "id": 1773763283661,
+        "title": "Bitcoin Price",
+        "type": "stats",
+        "apiUrl": "https://api.coindesk.com/v1/bpi/currentprice.json"
+      },
+      {
+        "id": 1773763293645,
+        "title": "Bitcoin Price",
+        "type": "stats",
+        "apiUrl": "https://api.coindesk.com/v1/bpi/currentprice.json"
+      },
+      {
+        "id": 1773763305999,
+        "title": "Crypto Market",
+        "type": "table",
+        "apiUrl": "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=10&page=1"
+      },
+      {
+        "id": 1773763311761,
+        "title": "USD Exchange Rates",
+        "type": "exchangeRates",
+        "apiUrl": "https://open.er-api.com/v6/latest/USD"
+      },
+      {
+        "id": 1773763328722,
+        "title": "EUR Exchange Rates",
+        "type": "exchangeRates",
+        "apiUrl": "https://open.er-api.com/v6/latest/EUR"
+      },
+      {
+        "id": 1773763338180,
+        "title": "Hacker News",
+        "type": "news",
+        "apiUrl": "https://hn.algolia.com/api/v1/search?tags=front_page&hitsPerPage=10"
+      },
+      {
+        "id": 1773763341770,
+        "title": "Next.js on GitHub",
+        "type": "stats",
+        "apiUrl": "https://api.github.com/repos/vercel/next.js"
+      },
+      {
+        "id": 1773763351519,
+        "title": "React on GitHub",
+        "type": "stats",
+        "apiUrl": "https://api.github.com/repos/facebook/react"
+      },
+      {
+        "id": 1773763355201,
+        "title": "Trending GitHub Repos",
+        "type": "list",
+        "apiUrl": "https://api.github.com/search/repositories?q=stars:>50000&sort=stars&per_page=10"
+      },
+      {
+        "id": 1773763362109,
+        "title": "Public APIs Directory",
+        "type": "table",
+        "apiUrl": "https://api.publicapis.org/entries"
+      },
+      {
+        "id": 1773763368214,
+        "title": "Latest SpaceX Launch",
+        "type": "stats",
+        "apiUrl": "https://api.spacexdata.com/v4/launches/latest"
+      },
+      {
+        "id": 1773763375723,
+        "title": "Next SpaceX Launch",
+        "type": "stats",
+        "apiUrl": "https://api.spacexdata.com/v4/launches/next"
+      },
+      {
+        "id": 1773763389941,
+        "title": "NASA Astronomy Pic",
+        "type": "cards",
+        "apiUrl": "https://api.nasa.gov/planetary/apod?api_key=DEMO_KEY"
+      },
+      {
+        "id": 1773763416929,
+        "title": "ISS Location",
+        "type": "stats",
+        "apiUrl": "http://api.open-notify.org/iss-now.json"
+      },
+      {
+        "id": 1773763425266,
+        "title": "Weather – London",
+        "type": "weather",
+        "apiUrl": "https://api.open-meteo.com/v1/forecast?latitude=51.5074&longitude=-0.1278&current_weather=true&hourly=temperature_2m,precipitation_probability"
+      },
+      {
+        "id": 1773763431840,
+        "title": "Weather – New York",
+        "type": "weather",
+        "apiUrl": "https://api.open-meteo.com/v1/forecast?latitude=40.7128&longitude=-74.0060&current_weather=true&hourly=temperature_2m,precipitation_probability"
+      },
+      {
+        "id": 1773763436073,
+        "title": "Weather – Tokyo",
+        "type": "weather",
+        "apiUrl": "https://api.open-meteo.com/v1/forecast?latitude=35.6762&longitude=139.6503&current_weather=true&hourly=temperature_2m,precipitation_probability"
+      },
+      {
+        "id": 1773763450794,
+        "title": "World Countries",
+        "type": "table",
+        "apiUrl": "https://restcountries.com/v3.1/all?fields=name,population,region,area"
+      },
+      {
+        "id": 1773763462098,
+        "title": "My IP & Location",
+        "type": "stats",
+        "apiUrl": "https://ipapi.co/json/"
+      },
+      {
+        "id": 1773763477502,
+        "title": "Current Time",
+        "type": "stats",
+        "apiUrl": "https://worldtimeapi.org/api/ip"
+      },
+      {
+        "id": 1773763489280,
+        "title": "Programming Books",
+        "type": "books",
+        "apiUrl": "https://openlibrary.org/search.json?q=javascript+programming&fields=title,author_name,first_publish_year&limit=10"
+      },
+      {
+        "id": 1773763502898,
+        "title": "Science Books",
+        "type": "books",
+        "apiUrl": "https://openlibrary.org/search.json?q=popular+science&fields=title,author_name,first_publish_year&limit=10"
+      },
+      {
+        "id": 1773763516940,
+        "title": "Random Profiles",
+        "type": "cards",
+        "apiUrl": "https://randomuser.me/api/?results=6"
+      },
+      {
+        "id": 1773763534003,
+        "title": "Sample Posts",
+        "type": "list",
+        "apiUrl": "https://jsonplaceholder.typicode.com/posts?_limit=10"
+      },
+      {
+        "id": 1773763542114,
+        "title": "Sample Todos",
+        "type": "list",
+        "apiUrl": "https://jsonplaceholder.typicode.com/todos?_limit=20"
+      },
+      {
+        "id": 1773763554061,
+        "title": "F1 Drivers (Latest)",
+        "type": "sports",
+        "apiUrl": "https://api.openf1.org/v1/drivers?session_key=latest"
+      },
+      {
+        "id": 1773763563519,
+        "title": "Random Joke",
+        "type": "text",
+        "apiUrl": "https://official-joke-api.appspot.com/random_joke"
+      },
+      {
+        "id": 1773763573522,
+        "title": "Advice of the Day",
+        "type": "text",
+        "apiUrl": "https://api.adviceslip.com/advice"
+      },
+      {
+        "id": 1773763582805,
+        "title": "Random Fact",
+        "type": "text",
+        "apiUrl": "https://uselessfacts.jsph.pl/api/v2/facts/random"
+      },
+      {
+        "id": 1773763593966,
+        "title": "Cat Fact",
+        "type": "text",
+        "apiUrl": "https://catfact.ninja/fact"
+      },
+      {
+        "id": 1773763602186,
+        "title": "Cat Gallery",
+        "type": "cards",
+        "apiUrl": "https://api.thecatapi.com/v1/images/search?limit=6"
+      },
+      {
+        "id": 1773763609960,
+        "title": "Pokémon",
+        "type": "list",
+        "apiUrl": "https://pokeapi.co/api/v2/pokemon?limit=20"
+      },
+      {
+        "id": 1773763616940,
+        "title": "Activity Idea",
+        "type": "text",
+        "apiUrl": "https://www.boredapi.com/api/activity"
+      }
+    ],
     "2": []
   },
   "branding": {
